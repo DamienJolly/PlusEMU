@@ -68,7 +68,7 @@ namespace Plus.Communication.Packets.Incoming.Catalog
             if (session.GetHabbo().Credits < totalCreditsCost || session.GetHabbo().Duckets < totalPixelCost || session.GetHabbo().Diamonds < totalDiamondCost)
                 return;
 
-            int limitedEditionSells = 0;
+            int limitedEditionNumber = 0;
             int limitedEditionStack = 0;
 
             #region Create the extradata
@@ -175,7 +175,7 @@ namespace Plus.Communication.Packets.Incoming.Catalog
 
             if (item.IsLimited)
             {
-                if (item.LimitedEditionStack <= item.LimitedEditionSells)
+                if (item.LimitedNumbers.Count <= 0)
                 {
                     session.SendNotification("This item has sold out!\n\n" + "Please note, you have not recieved another item (You have also not been charged for it!)");
                     session.SendPacket(new CatalogUpdatedComposer());
@@ -183,16 +183,18 @@ namespace Plus.Communication.Packets.Incoming.Catalog
                     return;
                 }
 
+                limitedEditionNumber = item.LimitedNumbers[0];
+                limitedEditionStack = item.LimitedEditionStack;
                 item.LimitedEditionSells++;
+                
                 using (IQueryAdapter dbClient = PlusEnvironment.GetDatabaseManager().GetQueryReactor())
                 {
-                    dbClient.SetQuery("UPDATE `catalog_items` SET `limited_sells` = @limitSells WHERE `id` = @itemId LIMIT 1");
-                    dbClient.AddParameter("limitSells", item.LimitedEditionSells);
+                    dbClient.SetQuery("INSERT INTO `catalog_items_limited` (`number`, `item_id`) VALUES (@number, @itemId)");
+                    dbClient.AddParameter("number", limitedEditionNumber);
                     dbClient.AddParameter("itemId", item.Id);
                     dbClient.RunQuery();
 
-                    limitedEditionSells = item.LimitedEditionSells;
-                    limitedEditionStack = item.LimitedEditionStack;
+                    item.LimitedNumbers.Remove(limitedEditionNumber);
                 }
             }
 
@@ -234,7 +236,7 @@ namespace Plus.Communication.Packets.Incoming.Catalog
                             }
                             else
                             {
-                                newItem = ItemFactory.CreateSingleItemNullable(item.Data, session.GetHabbo(), extraData, extraData, 0, limitedEditionSells, limitedEditionStack);
+                                newItem = ItemFactory.CreateSingleItemNullable(item.Data, session.GetHabbo(), extraData, extraData, 0, limitedEditionNumber, limitedEditionStack);
 
                                 if (newItem != null)
                                 {

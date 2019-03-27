@@ -65,7 +65,7 @@ namespace Plus.HabboHotel.Catalog
                 if (!itemDataManager.GetItem(itemId, out ItemData data))
                     continue;
 
-                ItemDataList.Add(new CatalogItem(0, itemId, data, string.Empty, 0, 0, 0, 0, Amount, 0, 0, false, "", "", 0));
+                ItemDataList.Add(new CatalogItem(0, itemId, data, string.Empty, 0, 0, 0, 0, Amount, new List<int>(), 0, false, "", "", 0));
             }
         }
     }

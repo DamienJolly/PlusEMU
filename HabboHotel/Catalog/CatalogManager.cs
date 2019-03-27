@@ -11,6 +11,7 @@ using Plus.HabboHotel.Catalog.Marketplace;
 using Plus.HabboHotel.Catalog.Clothing;
 
 using Plus.Database.Interfaces;
+using Plus.Utilities;
 
 namespace Plus.HabboHotel.Catalog
 {
@@ -91,9 +92,14 @@ namespace Plus.HabboHotel.Catalog
                         if (OfferId != -1 && !_itemOffers.ContainsKey(OfferId))
                             _itemOffers.Add(OfferId, PageId);
 
+                        List<int> limitedNumbers = GetLimitedNumbers(
+                            Convert.ToInt32(Row["id"]),
+                            Convert.ToInt32(Row["limited_stack"]));
+                        limitedNumbers.Shuffle();
+
                         _items[PageId].Add(Convert.ToInt32(Row["id"]), new CatalogItem(Convert.ToInt32(Row["id"]), Convert.ToInt32(Row["item_id"]),
                             Data, Convert.ToString(Row["catalog_name"]), Convert.ToInt32(Row["page_id"]), Convert.ToInt32(Row["cost_credits"]), Convert.ToInt32(Row["cost_pixels"]), Convert.ToInt32(Row["cost_diamonds"]),
-                            Convert.ToInt32(Row["amount"]), Convert.ToInt32(Row["limited_sells"]), Convert.ToInt32(Row["limited_stack"]), PlusEnvironment.EnumToBool(Row["offer_active"].ToString()),
+                            Convert.ToInt32(Row["amount"]), limitedNumbers, Convert.ToInt32(Row["limited_stack"]), PlusEnvironment.EnumToBool(Row["offer_active"].ToString()),
                             Convert.ToString(Row["extradata"]), Convert.ToString(Row["badge"]), Convert.ToInt32(Row["offer_id"])));
                     }
                 }
@@ -160,6 +166,37 @@ namespace Plus.HabboHotel.Catalog
             }
 
             log.Info("Catalog Manager -> LOADED");
+        }
+
+        private List<int> GetLimitedNumbers(int itemId, int size)
+        {
+            List<int> availableNumbers = new List<int>();
+            List<int> takenNumbers = new List<int>();
+
+            using (IQueryAdapter dbClient = PlusEnvironment.GetDatabaseManager().GetQueryReactor())
+            {
+                dbClient.SetQuery("SELECT `number` FROM `catalog_items_limited` WHERE `item_id` = @itemId");
+                dbClient.AddParameter("itemId", itemId);
+                DataTable limitedNumbers = dbClient.GetTable();
+
+                if (limitedNumbers != null)
+                {
+                    foreach (DataRow row in limitedNumbers.Rows)
+                    {
+                        int numberId = Convert.ToInt32(row["number"]);
+                        if (!takenNumbers.Contains(numberId))
+                            takenNumbers.Add(numberId);
+                    }
+                }
+            }
+
+            for (int i = 1; i <= size; i++)
+            {
+                if (!takenNumbers.Contains(i))
+                    availableNumbers.Add(i);
+            }
+
+            return availableNumbers;
         }
 
         public bool TryGetBot(int ItemId, out CatalogBot Bot)

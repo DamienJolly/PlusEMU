@@ -1,4 +1,5 @@
 ﻿using Plus.HabboHotel.Items;
+using System.Collections.Generic;
 
 namespace Plus.HabboHotel.Catalog
 {
@@ -11,18 +12,20 @@ namespace Plus.HabboHotel.Catalog
         public int CostCredits { get; private set; }
         public string ExtraData { get; private set; }
         public bool HaveOffer { get; private set; }
-        public bool IsLimited { get; private set; }
         public string Name { get; private set; }
         public int PageID { get; private set; }
         public int CostPixels { get; private set; }
-        public int LimitedEditionStack { get; private set; }
-        public int LimitedEditionSells { get; set; }
         public int CostDiamonds { get; private set; }
         public string Badge { get; private set; }
         public int OfferId { get; private set; }
 
+        public bool IsLimited { get; private set; }
+        public int LimitedEditionSells { get; set; }
+        public int LimitedEditionStack { get; private set; }
+        public List<int> LimitedNumbers { get; private set; }
+
         public CatalogItem(int id, int itemId, ItemData data, string catalogName, int pageId, int costCredits, int costPixels,
-            int costDiamonds, int amount, int limitedEditionSells, int limitedEditionStack, bool hasOffer, string extraData, string badge, int offerId)
+            int costDiamonds, int amount, List<int> limitedNumbers, int limitedEditionStack, bool hasOffer, string extraData, string badge, int offerId)
         {
             Id = id;
             Name = catalogName;
@@ -33,9 +36,10 @@ namespace Plus.HabboHotel.Catalog
             CostPixels = costPixels;
             CostDiamonds = costDiamonds;
             Amount = amount;
-            LimitedEditionSells = limitedEditionSells;
+            LimitedNumbers = limitedNumbers;
+            LimitedEditionSells = limitedEditionStack - limitedNumbers.Count;
             LimitedEditionStack = limitedEditionStack;
-            IsLimited = (limitedEditionStack > 0);
+            IsLimited = limitedEditionStack > 0;
             HaveOffer = hasOffer;
             ExtraData = extraData;
             Badge = badge;

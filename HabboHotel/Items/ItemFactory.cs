@@ -38,6 +38,7 @@ namespace Plus.HabboHotel.Items
                     dbClient.AddParameter("gid", GroupId);
                     dbClient.RunQuery();
                 }
+
                 return Item;
             }
         }
